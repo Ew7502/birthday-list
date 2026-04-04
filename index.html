@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Birthday Wishlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+        .gift-item { display: flex; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #eee; align-items: center; }
+        button { background: #3ecf8e; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #34b27b; }
+        .bought { text-decoration: line-through; color: #888; }
+    </style>
+</head>
+<body>
+
+    <h1>🎂 My Birthday List</h1>
+    <div id="gift-list">Loading gifts...</div>
+
+    <script>
+        // 1. Initialize Supabase
+        const _supabase = supabase.createClient('https://svhwpscnnxqwmzhmcqda.supabase.co', 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa');
+
+        async function fetchGifts() {
+            const { data, error } = await _supabase
+                .from('gifts')
+                .select('*')
+                .eq('is_bought', false); // Only show items not yet bought
+
+            if (error) console.error('Error:', error);
+            else displayGifts(data);
+        }
+
+        function displayGifts(gifts) {
+            const listDiv = document.getElementById('gift-list');
+            if (gifts.length === 0) {
+                listDiv.innerHTML = "<p>Everything has been claimed! (Or the list is empty)</p>";
+                return;
+            }
+
+            listDiv.innerHTML = gifts.map(item => `
+                <div class="gift-item">
+                    <span>${item.name}</span>
+                    <button onclick="claimGift(${item.id})">I bought this</button>
+                </div>
+            `).join('');
+        }
+
+        async function claimGift(id) {
+            const { error } = await _supabase
+                .from('gifts')
+                .update({ is_bought: true })
+                .eq('id', id);
+
+            if (error) alert("Update failed!");
+            else fetchGifts(); // Refresh the list
+        }
+
+        fetchGifts();
+    </script>
+</body>
+</html>
