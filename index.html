@@ -3,65 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Birthday Wishlist</title>
+    <title>Birthday Wishlist</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-        .gift-item { display: flex; justify-content: space-between; padding: 1rem; border-bottom: 1px solid #eee; align-items: center; }
-        button { background: #3ecf8e; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background-color: #f9f9f9; }
+        h1 { text-align: center; color: #333; }
+        .gift-item { background: white; padding: 1.2rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .details { flex-grow: 1; margin-right: 10px; }
+        .name { font-weight: bold; display: block; margin-bottom: 4px; }
+        .price { color: #2e7d32; font-weight: bold; font-size: 0.9rem; }
+        .link { display: inline-block; margin-top: 5px; font-size: 0.8rem; color: #007bff; text-decoration: none; }
+        button { background: #3ecf8e; color: white; border: none; padding: 0.6rem 1rem; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #34b27b; }
-        .bought { text-decoration: line-through; color: #888; }
     </style>
 </head>
 <body>
 
     <h1>🎂 My Birthday List</h1>
-    <div id="gift-list">Loading gifts...</div>
+    <div id="gift-list">Checking the list...</div>
 
     <script>
-        // 1. Initialize Supabase
-        const _supabase = supabase.createClient('https://svhwpscnnxqwmzhmcqda.supabase.co', 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa');
+        // REPLACE THESE WITH YOUR ACTUAL KEYS FROM SUPABASE SETTINGS > API
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function fetchGifts() {
             const { data, error } = await _supabase
                 .from('gifts')
                 .select('*')
-                .eq('is_bought', false); // Only show items not yet bought
+                .eq('is_bought', false);
 
-            if (error) console.error('Error:', error);
-            else displayGifts(data);
+            if (error) {
+                console.error(error);
+                document.getElementById('gift-list').innerHTML = "Error loading list.";
+            } else {
+                displayGifts(data);
+            }
         }
 
         function displayGifts(gifts) {
-    const listDiv = document.getElementById('gift-list');
-    
-    if (gifts.length === 0) {
-        listDiv.innerHTML = "<p>Everything has been claimed! (Or the list is empty)</p>";
-        return;
-    }
+            const listDiv = document.getElementById('gift-list');
+            if (gifts.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;'>All items have been claimed! 🎉</p>";
+                return;
+            }
 
-    listDiv.innerHTML = gifts.map(item => `
-        <div class="gift-item">
-            <div>
-                <strong>${item.name}</strong>
-                <div style="color: #666; font-size: 0.9rem;">
-                    ${item.price ? '£' + item.price : 'Price not listed'}
+            listDiv.innerHTML = gifts.map(item => `
+                <div class="gift-item">
+                    <div class="details">
+                        <span class="name">${item.name}</span>
+                        <span class="price">£${item.price}</span><br>
+                        <a href="${item.url}" target="_blank" class="link">View Item ↗</a>
+                    </div>
+                    <button onclick="claimGift(${item.id}, '${item.name}')">I got this!</button>
                 </div>
-            </div>
-            <button onclick="claimGift(${item.id})">I bought this</button>
-        </div>
-    `).join('');
-   }
+            `).join('');
         }
 
-        async function claimGift(id) {
-            const { error } = await _supabase
-                .from('gifts')
-                .update({ is_bought: true })
-                .eq('id', id);
+        async function claimGift(id, name) {
+            if (confirm(`Are you sure you want to mark "${name}" as bought?`)) {
+                const { error } = await _supabase
+                    .from('gifts')
+                    .update({ is_bought: true })
+                    .eq('id', id);
 
-            if (error) alert("Update failed!");
-            else fetchGifts(); // Refresh the list
+                if (error) alert("Oops! Something went wrong.");
+                else fetchGifts();
+            }
         }
 
         fetchGifts();
