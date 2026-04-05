@@ -14,55 +14,69 @@
         .name { font-weight: 700; font-size: 1.1rem; display: block; margin-bottom: 5px; color: #2d3436; }
         .price { color: #27ae60; font-weight: 800; font-size: 1rem; }
         .link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #0984e3; text-decoration: none; font-weight: 500; }
-        .link:hover { text-decoration: underline; }
-        button { background: #00b894; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.3s ease; }
+        button { background: #00b894; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
         button:hover { background: #009677; }
-        .loading { text-align: center; font-style: italic; color: #636e72; }
+        .error-msg { background: #ffeaa7; padding: 1rem; border-radius: 8px; border: 1px solid #fdcb6e; color: #d35400; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <h1>🎂 My Birthday List</h1>
-    <div id="gift-list" class="loading">Loading your wishlist...</div>
+    <div id="gift-list">Loading your wishlist...</div>
 
     <script>
-        // Your Database Connection Info
+        // 1. Connection Info
         const SUPABASE_URL = 'https://svhwpscnnxqwmzhmcqda.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa';
 
-        // Initialize Supabase
+        // 2. Initialize
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Function to get the gifts from your database
         async function fetchGifts() {
+            // We removed the .eq filter temporarily to see if ANY data comes back
             const { data, error } = await _supabase
                 .from('gifts')
-                .select('*')
-                .eq('bought', false); // Looking for items where bought is false
+                .select('*');
 
             if (error) {
-                console.error("Database Error:", error);
-                document.getElementById('gift-list').innerHTML = "<p>Error connecting to the list. Please check your Supabase settings.</p>";
+                console.error(error);
+                document.getElementById('gift-list').innerHTML = `
+                    <div class="error-msg">
+                        <strong>Connection Error:</strong><br>
+                        ${error.message}<br><br>
+                        <em>Tip: Make sure RLS is disabled or has a 'Select' policy!</em>
+                    </div>`;
             } else {
                 displayGifts(data);
             }
         }
 
-        // Function to draw the gifts on the screen
         function displayGifts(gifts) {
             const listDiv = document.getElementById('gift-list');
-            listDiv.classList.remove('loading');
-
+            
+            // If the database is empty or blocked by RLS
             if (!gifts || gifts.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center; font-size: 1.2rem;'>All items have been claimed! 🎉</p>";
+                listDiv.innerHTML = `
+                    <div class="error-msg">
+                        <strong>No items found.</strong><br>
+                        If you have items in Supabase, your "Policies" (RLS) might be blocking the website from seeing them.
+                    </div>`;
                 return;
             }
 
-            listDiv.innerHTML = gifts.map(item => `
+            // Filter out items where bought is true (done in JS for safety)
+            const availableGifts = gifts.filter(g => g.bought === false || g.bought === null);
+
+            if (availableGifts.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;'>All items claimed! 🎉</p>";
+                return;
+            }
+
+            listDiv.innerHTML = availableGifts.map(item => `
                 <div class="gift-item">
                     <div class="details">
                         <span class="name">${item.name}</span>
-                        <span class="price">£${item.price}</span><br>
+                        <span class="price">£${item.price || '0.00'}</span><br>
                         <a href="${item.url}" target="_blank" class="link">View Online ↗</a>
                     </div>
                     <button onclick="claimGift(${item.id}, '${item.name.replace(/'/g, "\\'")}')">I bought this</button>
@@ -70,23 +84,21 @@
             `).join('');
         }
 
-        // Function to update the item when someone clicks the button
         async function claimGift(id, name) {
-            if (confirm(`Mark "${name}" as bought? (This will remove it from the list for everyone else)`)) {
+            if (confirm(`Mark "${name}" as bought?`)) {
                 const { error } = await _supabase
                     .from('gifts')
                     .update({ bought: true })
                     .eq('id', id);
 
                 if (error) {
-                    alert("Could not update. Check your Supabase RLS policies!");
+                    alert("Error updating: " + error.message);
                 } else {
-                    fetchGifts(); // Refresh the list immediately
+                    fetchGifts();
                 }
             }
         }
 
-        // Start the fetch when the page opens
         fetchGifts();
     </script>
 </body>
