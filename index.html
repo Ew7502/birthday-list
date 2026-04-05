@@ -3,50 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birthday Wishlist</title>
+    <title>My Birthday Wishlist</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background-color: #f9f9f9; }
-        h1 { text-align: center; color: #333; }
-        .gift-item { background: white; padding: 1.2rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .details { flex-grow: 1; margin-right: 10px; }
-        .name { font-weight: bold; display: block; margin-bottom: 4px; }
-        .price { color: #2e7d32; font-weight: bold; font-size: 0.9rem; }
-        .link { display: inline-block; margin-top: 5px; font-size: 0.8rem; color: #007bff; text-decoration: none; }
-        button { background: #3ecf8e; color: white; border: none; padding: 0.6rem 1rem; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #34b27b; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background-color: #f4f7f6; color: #333; }
+        h1 { text-align: center; color: #2d3436; margin-bottom: 2rem; }
+        #gift-list { display: flex; flex-direction: column; gap: 15px; }
+        .gift-item { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; }
+        .details { flex-grow: 1; margin-right: 15px; }
+        .name { font-weight: 700; font-size: 1.1rem; display: block; margin-bottom: 5px; color: #2d3436; }
+        .price { color: #27ae60; font-weight: 800; font-size: 1rem; }
+        .link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #0984e3; text-decoration: none; font-weight: 500; }
+        .link:hover { text-decoration: underline; }
+        button { background: #00b894; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.3s ease; }
+        button:hover { background: #009677; }
+        .loading { text-align: center; font-style: italic; color: #636e72; }
     </style>
 </head>
 <body>
 
     <h1>🎂 My Birthday List</h1>
-    <div id="gift-list">Checking the list...</div>
+    <div id="gift-list" class="loading">Loading your wishlist...</div>
 
     <script>
-        // REPLACE THESE WITH YOUR ACTUAL KEYS FROM SUPABASE SETTINGS > API
+        // Your Database Connection Info
         const SUPABASE_URL = 'https://svhwpscnnxqwmzhmcqda.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa';
 
-        const _supabase = supabase.createClient(https://svhwpscnnxqwmzhmcqda.supabase.coL, sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa);
+        // Initialize Supabase
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Function to get the gifts from your database
         async function fetchGifts() {
             const { data, error } = await _supabase
                 .from('gifts')
                 .select('*')
-                .eq('bought', false);
+                .eq('bought', false); // Looking for items where bought is false
 
             if (error) {
-                console.error(error);
-                document.getElementById('gift-list').innerHTML = "Error loading list.";
+                console.error("Database Error:", error);
+                document.getElementById('gift-list').innerHTML = "<p>Error connecting to the list. Please check your Supabase settings.</p>";
             } else {
                 displayGifts(data);
             }
         }
 
+        // Function to draw the gifts on the screen
         function displayGifts(gifts) {
             const listDiv = document.getElementById('gift-list');
-            if (gifts.length === 0) {
-                listDiv.innerHTML = "<p style='text-align:center;'>All items have been claimed! 🎉</p>";
+            listDiv.classList.remove('loading');
+
+            if (!gifts || gifts.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center; font-size: 1.2rem;'>All items have been claimed! 🎉</p>";
                 return;
             }
 
@@ -55,25 +63,30 @@
                     <div class="details">
                         <span class="name">${item.name}</span>
                         <span class="price">£${item.price}</span><br>
-                        <a href="${item.url}" target="_blank" class="link">View Item ↗</a>
+                        <a href="${item.url}" target="_blank" class="link">View Online ↗</a>
                     </div>
-                    <button onclick="claimGift(${item.id}, '${item.name}')">I got this!</button>
+                    <button onclick="claimGift(${item.id}, '${item.name.replace(/'/g, "\\'")}')">I bought this</button>
                 </div>
             `).join('');
         }
 
+        // Function to update the item when someone clicks the button
         async function claimGift(id, name) {
-            if (confirm(`Are you sure you want to mark "${name}" as bought?`)) {
+            if (confirm(`Mark "${name}" as bought? (This will remove it from the list for everyone else)`)) {
                 const { error } = await _supabase
                     .from('gifts')
                     .update({ bought: true })
                     .eq('id', id);
 
-                if (error) alert("Oops! Something went wrong.");
-                else fetchGifts();
+                if (error) {
+                    alert("Could not update. Check your Supabase RLS policies!");
+                } else {
+                    fetchGifts(); // Refresh the list immediately
+                }
             }
         }
 
+        // Start the fetch when the page opens
         fetchGifts();
     </script>
 </body>
