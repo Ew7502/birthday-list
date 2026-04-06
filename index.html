@@ -6,97 +6,18 @@
     <title>My Birthday Wishlist</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-    /* 1. The "Base" - settings for all devices */
-    body { 
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-        max-width: 600px; /* Slightly wider for tablets */
-        margin: 0 auto; 
-        padding: 1rem; 
-        background-color: #f4f7f6; 
-        color: #333;
-        line-height: 1.5;
-    }
-
-    h1 { 
-        text-align: center; 
-        color: #2d3436; 
-        margin: 1.5rem 0;
-        font-size: 1.8rem;
-    }
-
-    #gift-list { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 12px; 
-    }
-
-    /* 2. The Card - adjusted for fingers to tap easily */
-    .gift-item { 
-        background: white; 
-        padding: 1rem; 
-        border-radius: 12px; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        border: 1px solid #e0e0e0;
-    }
-
-    .details { 
-        flex-grow: 1; 
-        padding-right: 10px; 
-    }
-
-    .name { 
-        font-weight: 700; 
-        font-size: 1.05rem; 
-        display: block; 
-        color: #2d3436; 
-    }
-
-    .price { 
-        color: #27ae60; 
-        font-weight: 800; 
-    }
-
-    .link { 
-        display: inline-block; 
-        margin-top: 5px; 
-        font-size: 0.8rem; 
-        color: #0984e3; 
-        text-decoration: none; 
-    }
-
-    /* 3. The Button - made bigger for mobile "thumbs" */
-    button { 
-        background: #00b894; 
-        color: white; 
-        border: none; 
-        padding: 12px 16px; /* Bigger "tap target" */
-        border-radius: 8px; 
-        cursor: pointer; 
-        font-weight: bold;
-        white-space: nowrap; /* Keeps text on one line */
-        font-size: 0.9rem;
-        transition: transform 0.1s;
-    }
-
-    button:active {
-        transform: scale(0.95); /* Little "click" feel on phones */
-    }
-
-    /* 4. "Media Query" - Special rule for tiny phones */
-    @media (max-width: 400px) {
-        .gift-item {
-            flex-direction: column; /* Stack details and button vertically */
-            align-items: flex-start;
-            gap: 12px;
-        }
-        button {
-            width: 100%; /* Make button full width on tiny phones */
-        }
-    }
-</style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background-color: #f4f7f6; color: #333; }
+        h1 { text-align: center; color: #2d3436; margin-bottom: 2rem; }
+        #gift-list { display: flex; flex-direction: column; gap: 15px; }
+        .gift-item { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; }
+        .details { flex-grow: 1; margin-right: 15px; }
+        .name { font-weight: 700; font-size: 1.1rem; display: block; margin-bottom: 5px; color: #2d3436; }
+        .price { color: #27ae60; font-weight: 800; font-size: 1rem; }
+        .link { display: inline-block; margin-top: 8px; font-size: 0.85rem; color: #0984e3; text-decoration: none; font-weight: 500; }
+        button { background: #00b894; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #009677; }
+        .error-msg { background: #ffeaa7; padding: 1rem; border-radius: 8px; border: 1px solid #fdcb6e; color: #d35400; font-size: 0.9rem; }
+    </style>
 </head>
 <body>
 
