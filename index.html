@@ -22,7 +22,9 @@
 <body>
 
     <h1>🎂 Elise's Birthday List !!!</h1>
-    <div id="gift-list">Loading your wishlist...</div>
+    <div id="stats-box" style="text-align: center; background: #e8f5e9; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9; color: #2e7d32; font-weight: bold;">
+    Loading stats...
+</div>
 
     <script>
         // 1. Connection Info
@@ -53,15 +55,35 @@
 
         function displayGifts(gifts) {
             const listDiv = document.getElementById('gift-list');
+            const statsDiv = document.getElementById('stats-box'); // This finds your new box
             
-            // If the database is empty or blocked by RLS
-            if (!gifts || gifts.length === 0) {
-                listDiv.innerHTML = `
-                    <div class="error-msg">
-                        <strong>No items found.</strong><br>
-                        If you have items in Supabase, your "Policies" (RLS) might be blocking the website from seeing them.
-                    </div>`;
+            // 1. Calculate the numbers
+            const total = gifts.length;
+            const boughtCount = gifts.filter(g => g.bought === true).length;
+            
+            // 2. Update the "Bow" box at the top
+            statsDiv.innerHTML = `🎁 ${boughtCount} / ${total} Gifts Claimed`;
+
+            // 3. Filter the list to show only items NOT bought
+            const availableGifts = gifts.filter(item => item.bought === false || item.bought === null);
+
+            if (availableGifts.length === 0 && total > 0) {
+                listDiv.innerHTML = "<p style='text-align:center; font-size: 1.2rem;'>All items have been claimed! 🎉</p>";
                 return;
+            }
+
+            // 4. Draw the remaining items
+            listDiv.innerHTML = availableGifts.map(item => `
+                <div class="gift-item">
+                    <div class="details">
+                        <span class="name">${item.name}</span>
+                        <span class="price">£${item.price || '0.00'}</span><br>
+                        <a href="${item.url}" target="_blank" class="link">View Online ↗</a>
+                    </div>
+                    <button onclick="claimGift(${item.id}, '${item.name.replace(/'/g, "\\'")}')">I bought this</button>
+                </div>
+            `).join('');
+        }
             }
 
             // Filter out items where bought is true (done in JS for safety)
