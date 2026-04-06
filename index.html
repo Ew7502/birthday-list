@@ -21,15 +21,8 @@
 </head>
 <body>
 
-    <h1>🎂 Elise's Birthday List !!!</h1>
-    <div id="stats-box" style="text-align: center; background: #e8f5e9; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c8e6c9; color: #2e7d32; font-weight: bold;">
-        Loading stats...
-    </div>
-
+    <h1>🎂 Elise's Birthday List !!</h1>
     <div id="gift-list">Loading your wishlist...</div>
-
-    <script>
-</div>
 
     <script>
         // 1. Connection Info
@@ -69,20 +62,6 @@
                         If you have items in Supabase, your "Policies" (RLS) might be blocking the website from seeing them.
                     </div>`;
                 return;
-            }
-
-            // 4. Draw the remaining items
-            listDiv.innerHTML = availableGifts.map(item => `
-                <div class="gift-item">
-                    <div class="details">
-                        <span class="name">${item.name}</span>
-                        <span class="price">£${item.price || '0.00'}</span><br>
-                        <a href="${item.url}" target="_blank" class="link">View Online ↗</a>
-                    </div>
-                    <button onclick="claimGift(${item.id}, '${item.name.replace(/'/g, "\\'")}')">I bought this</button>
-                </div>
-            `).join('');
-        }
             }
 
             // Filter out items where bought is true (done in JS for safety)
