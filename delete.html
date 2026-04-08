@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Delete Items</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 2rem auto; padding: 1rem; background-color: #f4f7f6; }
+        h1 { text-align: center; color: #d63031; }
+        .password-section { background: white; padding: 1rem; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .gift-item { background: white; padding: 1rem; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0; }
+        .delete-btn { background: #ff7675; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .delete-btn:hover { background: #d63031; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #636e72; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <h1>🗑️ Delete Gifts</h1>
+
+    <div class="password-section">
+        <label>Admin Password</label>
+        <input type="password" id="admin-pass" placeholder="Enter password to unlock delete buttons">
+    </div>
+
+    <div id="delete-list">Loading list...</div>
+
+    <a href="index.html" class="back-link">← Back to Public List</a>
+
+    <script>
+        const SUPABASE_URL = 'https://svhwpscnnxqwmzhmcqda.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const MY_SECRET_PASSWORD = "Birthday2026EW"; // Use the same password as add.html
+
+        async function loadItems() {
+            const { data, error } = await _supabase.from('gifts').select('*');
+            if (error) {
+                document.getElementById('delete-list').innerText = "Error loading gifts.";
+            } else {
+                renderItems(data);
+            }
+        }
+
+        function renderItems(items) {
+            const listDiv = document.getElementById('delete-list');
+            if (items.length === 0) {
+                listDiv.innerHTML = "<p>No items found.</p>";
+                return;
+            }
+
+            listDiv.innerHTML = items.map(item => `
+                <div class="gift-item">
+                    <span><strong>${item.name}</strong></span>
+                    <button class="delete-btn" onclick="deleteItem(${item.id}, '${item.name.replace(/'/g, "\\'")}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteItem(id, name) {
+            const enteredPass = document.getElementById('admin-pass').value;
+
+            if (enteredPass !== MY_SECRET_PASSWORD) {
+                alert("❌ Wrong password! You cannot delete items.");
+                return;
+            }
+
+            if (confirm(`Are you SURE you want to permanently delete "${name}"?`)) {
+                const { error } = await _supabase.from('gifts').delete().eq('id', id);
+                if (error) {
+                    alert("Delete failed: " + error.message);
+                } else {
+                    alert("Deleted!");
+                    loadItems(); // Refresh the list
+                }
+            }
+        }
+
+        loadItems();
+    </script>
+</body>
+</html>
