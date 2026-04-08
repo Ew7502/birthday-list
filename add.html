@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Gift</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 2rem auto; padding: 1rem; background-color: #f4f7f6; }
+        h1 { text-align: center; color: #2d3436; }
+        form { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; background: #0984e3; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0873c4; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #636e72; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <h1>➕ Add a Gift</h1>
+    
+    <form id="add-form">
+        <label>Gift Name</label>
+        <input type="text" id="name" placeholder="e.g. Hair Towel" required>
+
+        <label>Price (£)</label>
+        <input type="number" step="0.01" id="price" placeholder="9.99" required>
+
+        <label>Link (URL)</label>
+        <input type="url" id="url" placeholder="https://..." required>
+
+        <button type="submit" id="submit-btn">Add to Wishlist</button>
+    </form>
+
+    <a href="index.html" class="back-link">← Back to List</a>
+
+    <script>
+        // Use the same keys from your index.html
+        const SUPABASE_URL = 'https://svhwpscnnxqwmzhmcqda.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const form = document.getElementById('add-form');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = "Adding...";
+            btn.disabled = true;
+
+            const name = document.getElementById('name').value;
+            const price = document.getElementById('price').value;
+            const url = document.getElementById('url').value;
+
+            const { error } = await _supabase
+                .from('gifts')
+                .insert([{ name, price, url, bought: false }]);
+
+            if (error) {
+                alert("Error: " + error.message);
+                btn.innerText = "Add to Wishlist";
+                btn.disabled = false;
+            } else {
+                alert("Success! Gift added.");
+                form.reset();
+                btn.innerText = "Add to Wishlist";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
