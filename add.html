@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Gift</title>
+    <title>Admin: Add Gift</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: sans-serif; max-width: 400px; margin: 2rem auto; padding: 1rem; background-color: #f4f7f6; }
@@ -11,21 +11,26 @@
         form { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; background: #0984e3; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0873c4; }
+        button { width: 100%; background: #e67e22; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #d35400; }
         .back-link { display: block; text-align: center; margin-top: 20px; color: #636e72; text-decoration: none; }
     </style>
 </head>
 <body>
 
-    <h1>➕ Add a Gift</h1>
+    <h1>➕ Add a New Gift</h1>
     
     <form id="add-form">
+        <label>Admin Password</label>
+        <input type="password" id="admin-pass" placeholder="Enter password to unlock" required>
+
+        <hr style="margin-bottom: 20px; border: 0; border-top: 1px solid #eee;">
+
         <label>Gift Name</label>
-        <input type="text" id="name" placeholder="e.g. Hair Towel" required>
+        <input type="text" id="name" placeholder="e.g. Silk Pillowcase" required>
 
         <label>Price (£)</label>
-        <input type="number" step="0.01" id="price" placeholder="9.99" required>
+        <input type="number" step="0.01" id="price" placeholder="15.00" required>
 
         <label>Link (URL)</label>
         <input type="url" id="url" placeholder="https://..." required>
@@ -33,40 +38,53 @@
         <button type="submit" id="submit-btn">Add to Wishlist</button>
     </form>
 
-    <a href="index.html" class="back-link">← Back to List</a>
+    <a href="index.html" class="back-link">← Back to Public List</a>
 
     <script>
-        // Use the same keys from your index.html
         const SUPABASE_URL = 'https://svhwpscnnxqwmzhmcqda.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_jTRYYEXlB-0h1SbUwvIejg_sRuM7Fsa';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- SET YOUR PASSWORD HERE ---
+        const MY_SECRET_PASSWORD = "Birthday2024"; 
+        // ------------------------------
 
         const form = document.getElementById('add-form');
         
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const enteredPass = document.getElementById('admin-pass').value;
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Adding...";
+
+            // 1. Security Check
+            if (enteredPass !== MY_SECRET_PASSWORD) {
+                alert("❌ Incorrect Password. You are not authorized to add gifts.");
+                return;
+            }
+
+            // 2. Loading State
+            btn.innerText = "Processing...";
             btn.disabled = true;
 
             const name = document.getElementById('name').value;
             const price = document.getElementById('price').value;
             const url = document.getElementById('url').value;
 
+            // 3. Send to Supabase
             const { error } = await _supabase
                 .from('gifts')
                 .insert([{ name, price, url, bought: false }]);
 
             if (error) {
                 alert("Error: " + error.message);
-                btn.innerText = "Add to Wishlist";
-                btn.disabled = false;
             } else {
-                alert("Success! Gift added.");
+                alert("✅ Success! Gift added to your birthday list.");
                 form.reset();
-                btn.innerText = "Add to Wishlist";
-                btn.disabled = false;
             }
+
+            btn.innerText = "Add to Wishlist";
+            btn.disabled = false;
         });
     </script>
 </body>
